@@ -1,0 +1,274 @@
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
+    "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
+    monospace;
+}
+p,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+	margin: 0px;
+}
+
+.wrapper
+{
+    display: flex;
+    padding: 0% 4%
+}
+.canvas-section canvas {
+    max-width: 60%;
+    margin: 20% 0;
+}
+
+.left-section {
+ width: 50%;
+}
+.right-section
+{
+ width: 50%;
+}
+.canvas-section canvas
+{
+	max-width: 60%;
+}
+.upload {
+       width: 265px;
+    height: 35px;
+    margin-bottom: 10%;
+    color: #fff;
+    background: #c6102e;
+    border: 0;
+    border-radius: 0 0 20px;
+}
+.product-information
+{
+	margin: 2% 10%;
+    padding: 9%;
+}
+.product-info-title h4
+{
+	font-size: 30px;
+}
+.product-info-title p {
+    padding-top: 5px;
+}
+.primary-product-option
+{
+	border: 1px solid #ccc;
+    padding: 10% 5%;
+    margin-top: 10%;
+}
+.option-1 h6 {
+    padding-bottom: 5%;
+     text-align: center;
+}
+.secondary-product-info {
+    border: 1px solid #ccc;
+    padding: 5% 5%;
+
+    margin-top: 5%
+}
+.size-option {
+    display: flex;
+    flex-direction: column;
+}
+.fabric-option
+{
+	margin-top: 5%;
+	margin-top: 5%;
+    display: flex;
+    height: 50px;
+    flex-flow: column;
+}
+.fabric-option input {
+    width: 350px;
+    height: 35px
+    }
+.fabric-option input {
+    width: 85%;
+}
+.size-option input , .fabric-option input 
+{
+	margin-top: 2%;
+	    height: 25px;
+}
+.bottom-option
+{
+	margin-top: 5%;
+  margin-bottom: 5%;
+}
+.Print-frame , .desc , .size-option{
+    margin-top: 3%;
+}
+.bottom-option h6 , .side-option h6 , .Print-frame h6{
+   margin-bottom: 1%;
+    font-size: 13px;
+}
+.size-option i.fa.fa-caret-down
+{
+	position: absolute;
+    right: 24%;
+    margin-top: 32px;
+}
+.fabric-option i.fa.fa-caret-down {
+   position: absolute;
+    right: 19%;
+    margin-top: 30px;
+}
+.size-option input {
+    width: 210px;
+}
+.custom i.fa.fa-caret-down {
+    position: absolute;
+    bottom: 2px;
+}
+.open , .closed {
+    background: #63656a;
+    border: 0;
+    border-radius: 3px;
+    color: #fff;
+    padding: 10px 15px;
+    margin-right:5px;
+}
+.closed {
+    background: #fff;
+    border: 1px solid #000;
+    color: #000;
+}
+.desc input {
+    margin-top: 2%;
+    height: 30px;
+}
+
+.quantity {
+    border: 1px solid #ccc;
+    padding: 10px;
+    background: #cccccc26;
+}
+
+.values
+{
+	    display: flex;
+    justify-content: space-evenly;
+}
+
+.values input {
+    width: 40px;
+}
+.download-template
+{
+	text-align: center;
+}
+.download-temp
+{
+	margin-top: 5%;
+	    margin-bottom: 0;
+}
+.download-template p {
+    text-align: center;
+    text-decoration: underline;
+}
+.desc {
+    display: flex;
+    flex-direction: column;
+}
+.tab-options
+{
+	    display: flex;
+    justify-content: space-around;
+}
+.browse
+{
+	width: 275px;
+    text-align: center;
+    display: block;
+    margin: 0 auto;
+    height: 100px;
+    border: 1px dashed #3d70ac;
+    margin-top: 3%;
+}
+.addtocart
+ {
+    background: #e0e0df;
+}
+
+.browse p , .browse i.fa.fa-cloud-upload , .addtocart{
+    margin-top: 5%;
+}
+
+.browse i.fa.fa-cloud-upload
+{
+	    font-size: 28px;
+}
+.secondary-info-title h4 {
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 10px;
+    margin-bottom: 7px;
+}
+.browse-title h5 {
+    margin-left: 6%;
+    margin-top: 4%;
+    font-size: 16px;
+}
+/* Reset Select */
+select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  -ms-appearance: none;
+  appearance: none;
+  outline: 0;
+  box-shadow: none;
+  border: 0 !important;
+  background: #2c3e50;
+  background-image: none;
+}
+/* Remove IE arrow */
+select::-ms-expand {
+  display: none;
+}
+/* Custom Select */
+.select {
+  position: relative;
+  display: flex;
+  width: 20em;
+  height: 3em;
+  line-height: 3;
+  background: #2c3e50;
+  overflow: hidden;
+  border-radius: .25em;
+}
+select {
+  flex: 1;
+  padding: 0 .5em;
+  color: #fff;
+  cursor: pointer;
+}
+/* Arrow */
+.select::after {
+  content: '\25BC';
+  position: absolute;
+  top: 0;
+  right: 0;
+  padding: 0 1em;
+  background: #34495e;
+  cursor: pointer;
+  pointer-events: none;
+  -webkit-transition: .25s all ease;
+  -o-transition: .25s all ease;
+  transition: .25s all ease;
+}
+/* Transition */
+.select:hover::after {
+  color: #f39c12;
+}

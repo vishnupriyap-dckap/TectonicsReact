@@ -1,0 +1,118 @@
+const baseURL = "https://devcloud.productimize.com/cms/wp-content/themes/salient-child/View360/three_js_multi_fabric_multi_object_2/projects/demo/tectonics/square_corners/Dimensional_Rectangle_Canopy/assets_3d/high_quality/object_1/component_1/type_1/models/DC-REC-080601-P.glb";
+class PromizeImageSection extends React.Component {
+
+    componentDidMount() {
+        this.sceneSetup();
+        this.addCustomSceneObjects();
+        this.startAnimationLoop();
+        window.addEventListener('resize', this.handleWindowResize);
+    }
+    sceneSetup = () => {
+        const width = this.mount.clientWidth;
+        const height = this.mount.clientHeight;
+
+        this.scene = new THREE.Scene();
+        this.camera = new THREE.PerspectiveCamera(
+            75, 
+            width / height, 
+            0.1, 
+            1000 
+        );
+        this.camera.position.z = 9; 
+        this.controls = new THREE.OrbitControls( this.camera, this.mount );
+        this.renderer = new THREE.WebGLRenderer();
+        this.renderer.setSize( width, height );
+        this.mount.appendChild( this.renderer.domElement ); 
+    };
+    async addCustomSceneObjects() {
+        // const geometry = new THREE.BoxGeometry(2, 2, 2);
+        // const material = new THREE.MeshPhongMaterial( {
+        //     color: 0x156289,
+        //     emissive: 0x072534,
+        //     side: THREE.DoubleSide,
+        //     flatShading: true
+        // } );
+        // this.cube = new THREE.Mesh( geometry, material );
+        // this.scene.add( this.cube );
+
+        const light = new THREE.AmbientLight( 0xcfcfcf );
+        this.scene.add( light );
+
+        let hdri = await this.InitHdri('https://devcloud.productimize.com/cms/wp-content/themes/salient-child/View360/three_js_multi_fabric_multi_object_2/projects/_global_assets_/assets_3d/high_quality/hdri_images/sphere_mapping/studio015small.jpg')
+
+        let model = await this.DownloadModelGltf(baseURL)
+
+        model.traverse(
+            (child) => {
+                if (child.isMesh) {
+                    /* values for changing the image encoding. Linear = 3000, sRGB = 3001, RGBE = 3002, LogLuv = 3003 */
+                    if(child.material.userData.envMapNeeded)
+                        child.material.envMap = hdri
+                }
+            }
+        )
+        this.scene.add( model )
+    };
+    /* download model */
+    DownloadModelGltf = (modelUrl) => {
+        return new Promise((resolve, reject) => {
+            /* init gltf loader */
+            let loader = new THREE.GLTFLoader()
+            loader.load(modelUrl,
+                (gltf) => {
+                    resolve(gltf.scene)
+                },
+                (loading) => {
+                    /* model load progress */
+                    let loadProgress = Math.floor(loading.loaded / loading.total * 100)
+                },
+                (error) => {
+                    reject(`Unable to load the 3d model ${error}`)
+                }
+            )
+        })
+    }
+    /* load hdri texture for material reflections */
+    InitHdri = (url) => {
+        return new Promise((resolve, reject) => {
+            let textureLoader = new THREE.TextureLoader()
+            let hdri = textureLoader.load(url,
+                (loader) => {
+                    loader.mapping = THREE.SphericalReflectionMapping
+                    loader.encoding = THREE.sRGBEncoding
+                    resolve(loader)
+                },
+                undefined,
+                (error) => {
+                    reject(`Unable to load the hdri map ${error}`)
+                }
+            )
+        })
+    }
+    startAnimationLoop = () => {
+        this.renderer.render( this.scene, this.camera );
+        this.requestID = window.requestAnimationFrame(this.startAnimationLoop);
+    };
+    initModel = () =>{
+        console.log("Image Component",this.props.modelOptions);
+    }
+    handleWindowResize = () => {
+        const width = this.mount.clientWidth;
+        const height = this.mount.clientHeight;
+        this.renderer.setSize( width, height );
+        this.camera.aspect = width / height;
+        this.camera.updateProjectionMatrix();
+    }; 
+    render() {
+        console.log(this.props);
+        if(this.props.modelOptions && this.props.modelOptions.length > 0){
+            this.initModel();
+        }
+        const style = {width:'580px',height:'453px',marginTop:'70px'};
+        return (
+        <div className="left-section"> 
+            <div style={style} ref={ref => (this.mount = ref)} />
+        </div>
+        );
+    }
+}
