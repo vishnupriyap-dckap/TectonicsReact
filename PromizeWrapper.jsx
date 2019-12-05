@@ -94,13 +94,17 @@ class PromizeWrapper extends React.Component {
                });
             })
          })
-         console.log(modelUrl);
          this.setState({defaultOptions,selectedOptions,modelOptions})
       }
    }
    handleStateFromChild(defaultOptions, selectedOptions){
-
-      console.log(defaultOptions, selectedOptions,this.state.modelOptions);
+      const modelOptions = [];
+      console.log(defaultOptions,selectedOptions);
+      defaultOptions && defaultOptions.map((data)=>{
+         var obj = {[data.promize_tab_attribute_id]:data.link_model_attributes};
+         modelOptions.push(obj);
+      })
+      this.setState({defaultOptions,selectedOptions,modelOptions})
    }
    renderContainer() {
       return (

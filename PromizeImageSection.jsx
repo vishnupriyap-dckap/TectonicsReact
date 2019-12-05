@@ -1,11 +1,13 @@
-const baseURL = "https://devcloud.productimize.com/cms/wp-content/themes/salient-child/View360/three_js_multi_fabric_multi_object_2/projects/demo/tectonics/square_corners/Dimensional_Rectangle_Canopy/assets_3d/high_quality/object_1/component_1/type_1/models/DC-REC-080601-P.glb";
 class PromizeImageSection extends React.Component {
 
+    constructor(props){
+        super(props);
+        this.state = {
+            modelRendred:false,
+        }
+    }
     componentDidMount() {
-        this.sceneSetup();
-        this.addCustomSceneObjects();
-        this.startAnimationLoop();
-        window.addEventListener('resize', this.handleWindowResize);
+        // window.addEventListener('resize', this.handleWindowResize);
     }
     sceneSetup = () => {
         const width = this.mount.clientWidth;
@@ -24,7 +26,7 @@ class PromizeImageSection extends React.Component {
         this.renderer.setSize( width, height );
         this.mount.appendChild( this.renderer.domElement ); 
     };
-    async addCustomSceneObjects() {
+    async addCustomSceneObjects(baseURL) {
         // const geometry = new THREE.BoxGeometry(2, 2, 2);
         // const material = new THREE.MeshPhongMaterial( {
         //     color: 0x156289,
@@ -93,9 +95,26 @@ class PromizeImageSection extends React.Component {
         this.renderer.render( this.scene, this.camera );
         this.requestID = window.requestAnimationFrame(this.startAnimationLoop);
     };
-    initModel = () =>{
-        console.log("Image Component",this.props.modelOptions);
+  
+initThreeCanvas = () =>{
+    if(!this.state.modelRendred){
+        this.sceneSetup();
+        this.startAnimationLoop();
+        this.setState({modelRendred:true})   
     }
+    console.log(this.props.modelOptions);
+    this.props.modelOptions && this.props.modelOptions.map((defaultOption) => {
+        for (let tabAttributeId in defaultOption){
+            if(defaultOption.hasOwnProperty(tabAttributeId)){
+                let modelsData = JSON.parse(defaultOption[tabAttributeId])
+                modelsData.map((model) => {
+                    console.log(this.props.modelUrl[model.id]);
+                    this.addCustomSceneObjects(this.props.modelUrl[model.id]);
+                })
+            }
+        }
+    })
+}
     handleWindowResize = () => {
         const width = this.mount.clientWidth;
         const height = this.mount.clientHeight;
@@ -104,9 +123,9 @@ class PromizeImageSection extends React.Component {
         this.camera.updateProjectionMatrix();
     }; 
     render() {
-        console.log(this.props);
+        console.log(this.props.modelOptions);
         if(this.props.modelOptions && this.props.modelOptions.length > 0){
-            this.initModel();
+            this.initThreeCanvas();
         }
         const style = {width:'580px',height:'453px',marginTop:'70px'};
         return (
