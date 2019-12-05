@@ -107,7 +107,7 @@ initThreeCanvas = () =>{
         for (let tabAttributeId in defaultOption){
             if(defaultOption.hasOwnProperty(tabAttributeId)){
                 let modelsData = JSON.parse(defaultOption[tabAttributeId])
-                modelsData.map((model) => {
+                modelsData &&  modelsData.map((model) => {
                     console.log(this.props.modelUrl[model.id]);
                     this.addCustomSceneObjects(this.props.modelUrl[model.id]);
                 })
