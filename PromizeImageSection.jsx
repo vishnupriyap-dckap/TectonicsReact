@@ -1,3 +1,5 @@
+let downloadedModel = {};
+let modelRendred = false;
 class PromizeImageSection extends React.Component {
 
     constructor(props){
@@ -96,24 +98,31 @@ class PromizeImageSection extends React.Component {
         this.requestID = window.requestAnimationFrame(this.startAnimationLoop);
     };
   
-initThreeCanvas = () =>{
-    if(!this.state.modelRendred){
+ initThreeCanvas(){
+    if(!modelRendred){
         this.sceneSetup();
         this.startAnimationLoop();
-        this.setState({modelRendred:true})   
+        modelRendred = true;
+        // this.setState({modelRendred:true})   
     }
-    console.log(this.props.modelOptions);
     this.props.modelOptions && this.props.modelOptions.map((defaultOption) => {
         for (let tabAttributeId in defaultOption){
             if(defaultOption.hasOwnProperty(tabAttributeId)){
                 let modelsData = JSON.parse(defaultOption[tabAttributeId])
-                modelsData &&  modelsData.map((model) => {
-                    console.log(this.props.modelUrl[model.id]);
-                    this.addCustomSceneObjects(this.props.modelUrl[model.id]);
-                })
+                modelsData &&  modelsData.map( async function(model){
+                    // downloadedModel[model.id] = this.props.modelUrl[model.id];
+                    if(downloadedModel[model.id]){
+                        this.scene.add(  downloadedModel[model.id] )
+                    }else{
+                        let modelObject = await this.DownloadModelGltf(this.props.modelUrl[model.id]);
+                        downloadedModel[model.id] = modelObject;
+                        this.scene.add(  downloadedModel[model.id] )
+                    }
+                    // this.addCustomSceneObjects(this.props.modelUrl[model.id]);
+                },this)
             }
         }
-    })
+    },this)
 }
     handleWindowResize = () => {
         const width = this.mount.clientWidth;
