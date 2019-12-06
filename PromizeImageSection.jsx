@@ -23,6 +23,9 @@ class PromizeImageSection extends React.Component {
             1000 
         );
         this.camera.position.z = 9; 
+        const objectStateContainer = new THREE.Group()
+        objectStateContainer.name = 'objectStateContainer'
+        this.scene.add(objectStateContainer)
         this.controls = new THREE.OrbitControls( this.camera, this.mount );
         this.renderer = new THREE.WebGLRenderer();
         this.renderer.setSize( width, height );
@@ -102,23 +105,47 @@ class PromizeImageSection extends React.Component {
     if(!modelRendred){
         this.sceneSetup();
         this.startAnimationLoop();
+        const light = new THREE.AmbientLight( 0xcfcfcf );
+        this.scene.add( light );
         modelRendred = true;
         // this.setState({modelRendred:true})   
     }
+    let objectStateContainer = this.scene.getObjectByName('objectStateContainer')
     this.props.modelOptions && this.props.modelOptions.map((defaultOption) => {
+        // console.log(defaultOption)
         for (let tabAttributeId in defaultOption){
             if(defaultOption.hasOwnProperty(tabAttributeId)){
                 let modelsData = JSON.parse(defaultOption[tabAttributeId])
                 modelsData &&  modelsData.map( async function(model){
                     // downloadedModel[model.id] = this.props.modelUrl[model.id];
                     if(downloadedModel[model.id]){
-                        this.scene.add(  downloadedModel[model.id] )
+                        if(objectStateContainer[tabAttributeId] && objectStateContainer[tabAttributeId].idTab === downloadedModel[model.id].idTab) {
+                            objectStateContainer[tabAttributeId].visible = false
+                            objectStateContainer[tabAttributeId] = downloadedModel[model.id]
+                            downloadedModel[model.id].visible = true
+                        }
                     }else{
                         let modelObject = await this.DownloadModelGltf(this.props.modelUrl[model.id]);
+                        modelObject.idTab = tabAttributeId
+                        if(tabAttributeId == 1461) {
+                            modelObject.position.set(2, 0, 0)
+                        }
+                        else{
+                            modelObject.position.set(-2, 0, 0)
+                        }
+
+                        if(objectStateContainer[tabAttributeId] && objectStateContainer[tabAttributeId].idTab === modelObject.idTab){
+                            objectStateContainer[tabAttributeId].visible = false
+                            objectStateContainer[tabAttributeId] = modelObject
+                            modelObject.visible = true
+                        }
+                        else{
+                            objectStateContainer[tabAttributeId] = modelObject
+                            modelObject.visible = true
+                        }
                         downloadedModel[model.id] = modelObject;
-                        this.scene.add(  downloadedModel[model.id] )
+                        this.scene.add(modelObject)
                     }
-                    // this.addCustomSceneObjects(this.props.modelUrl[model.id]);
                 },this)
             }
         }
