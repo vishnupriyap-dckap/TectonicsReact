@@ -272,3 +272,13 @@ select {
 .select:hover::after {
   color: #f39c12;
 }
+.textbox{
+    outline: black auto 1px;
+    color: black;
+    width: 100%;
+    border: 1px;
+    height: 1.1875em;
+    display: block;
+    padding: 6px 0 7px;
+    margin-top:10px;
+}

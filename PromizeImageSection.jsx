@@ -2,10 +2,10 @@ let downloadedModel = {};
 let modelRendred = false;
 class PromizeImageSection extends React.Component {
 
-    constructor(props){
+    constructor(props) {
         super(props);
         this.state = {
-            modelRendred:false,
+            modelRendred: false,
         }
     }
     componentDidMount() {
@@ -17,19 +17,19 @@ class PromizeImageSection extends React.Component {
 
         this.scene = new THREE.Scene();
         this.camera = new THREE.PerspectiveCamera(
-            75, 
-            width / height, 
-            0.1, 
-            1000 
+            75,
+            width / height,
+            0.1,
+            1000
         );
-        this.camera.position.z = 9; 
+        this.camera.position.z = 9;
         const objectStateContainer = new THREE.Group()
         objectStateContainer.name = 'objectStateContainer'
         this.scene.add(objectStateContainer)
-        this.controls = new THREE.OrbitControls( this.camera, this.mount );
+        this.controls = new THREE.OrbitControls(this.camera, this.mount);
         this.renderer = new THREE.WebGLRenderer();
-        this.renderer.setSize( width, height );
-        this.mount.appendChild( this.renderer.domElement ); 
+        this.renderer.setSize(width, height);
+        this.mount.appendChild(this.renderer.domElement);
     };
     async addCustomSceneObjects(baseURL) {
         // const geometry = new THREE.BoxGeometry(2, 2, 2);
@@ -42,8 +42,8 @@ class PromizeImageSection extends React.Component {
         // this.cube = new THREE.Mesh( geometry, material );
         // this.scene.add( this.cube );
 
-        const light = new THREE.AmbientLight( 0xcfcfcf );
-        this.scene.add( light );
+        const light = new THREE.AmbientLight(0xcfcfcf);
+        this.scene.add(light);
 
         let hdri = await this.InitHdri('https://devcloud.productimize.com/cms/wp-content/themes/salient-child/View360/three_js_multi_fabric_multi_object_2/projects/_global_assets_/assets_3d/high_quality/hdri_images/sphere_mapping/studio015small.jpg')
 
@@ -53,12 +53,12 @@ class PromizeImageSection extends React.Component {
             (child) => {
                 if (child.isMesh) {
                     /* values for changing the image encoding. Linear = 3000, sRGB = 3001, RGBE = 3002, LogLuv = 3003 */
-                    if(child.material.userData.envMapNeeded)
+                    if (child.material.userData.envMapNeeded)
                         child.material.envMap = hdri
                 }
             }
         )
-        this.scene.add( model )
+        this.scene.add(model)
     };
     /* download model */
     DownloadModelGltf = (modelUrl) => {
@@ -97,77 +97,77 @@ class PromizeImageSection extends React.Component {
         })
     }
     startAnimationLoop = () => {
-        this.renderer.render( this.scene, this.camera );
+        this.renderer.render(this.scene, this.camera);
         this.requestID = window.requestAnimationFrame(this.startAnimationLoop);
     };
-  
- initThreeCanvas(){
-    if(!modelRendred){
-        this.sceneSetup();
-        this.startAnimationLoop();
-        const light = new THREE.AmbientLight( 0xcfcfcf );
-        this.scene.add( light );
-        modelRendred = true;
-        // this.setState({modelRendred:true})   
-    }
-    let objectStateContainer = this.scene.getObjectByName('objectStateContainer')
-    this.props.modelOptions && this.props.modelOptions.map((defaultOption) => {
-        // console.log(defaultOption)
-        for (let tabAttributeId in defaultOption){
-            if(defaultOption.hasOwnProperty(tabAttributeId)){
-                let modelsData = JSON.parse(defaultOption[tabAttributeId])
-                modelsData &&  modelsData.map( async function(model){
-                    // downloadedModel[model.id] = this.props.modelUrl[model.id];
-                    if(downloadedModel[model.id]){
-                        if(objectStateContainer[tabAttributeId] && objectStateContainer[tabAttributeId].idTab === downloadedModel[model.id].idTab) {
-                            objectStateContainer[tabAttributeId].visible = false
-                            objectStateContainer[tabAttributeId] = downloadedModel[model.id]
-                            downloadedModel[model.id].visible = true
-                        }
-                    }else{
-                        let modelObject = await this.DownloadModelGltf(this.props.modelUrl[model.id]);
-                        modelObject.idTab = tabAttributeId
-                        if(tabAttributeId == 1461) {
-                            modelObject.position.set(2, 0, 0)
-                        }
-                        else{
-                            modelObject.position.set(-2, 0, 0)
-                        }
 
-                        if(objectStateContainer[tabAttributeId] && objectStateContainer[tabAttributeId].idTab === modelObject.idTab){
-                            objectStateContainer[tabAttributeId].visible = false
-                            objectStateContainer[tabAttributeId] = modelObject
-                            modelObject.visible = true
-                        }
-                        else{
-                            objectStateContainer[tabAttributeId] = modelObject
-                            modelObject.visible = true
-                        }
-                        downloadedModel[model.id] = modelObject;
-                        this.scene.add(modelObject)
-                    }
-                },this)
-            }
+    initThreeCanvas() {
+        if (!modelRendred) {
+            this.sceneSetup();
+            this.startAnimationLoop();
+            modelRendred = true;
+            const light = new THREE.AmbientLight(0xcfcfcf);
+            this.scene.add(light);
+            // this.setState({modelRendred:true})   
         }
-    },this)
-}
+        this.loadThreeCanvasModel();
+    }
+    loadThreeCanvasModel = () => {
+        let objectStateContainer = this.scene.getObjectByName('objectStateContainer')
+        this.props.modelOptions && this.props.modelOptions.map((defaultOption) => {
+            for (let tabAttributeId in defaultOption) {
+                if (defaultOption.hasOwnProperty(tabAttributeId)) {
+                    let modelsData = JSON.parse(defaultOption[tabAttributeId])
+                    modelsData && modelsData.map(async function (model) {
+                        if (downloadedModel[model.id]) {
+                            if (objectStateContainer[tabAttributeId] && objectStateContainer[tabAttributeId].idTab === downloadedModel[model.id].idTab) {
+                                objectStateContainer[tabAttributeId].visible = false
+                                objectStateContainer[tabAttributeId] = downloadedModel[model.id]
+                                downloadedModel[model.id].visible = true
+                            }
+                        } else {
+                            let modelObject = await this.DownloadModelGltf(this.props.modelUrl[model.id]);
+                            modelObject.idTab = tabAttributeId
+                            if (tabAttributeId == 1461) {
+                                modelObject.position.set(2, 0, 0)
+                            }
+                            else {
+                                modelObject.position.set(-2, 0, 0)
+                            }
+
+                            if (objectStateContainer[tabAttributeId] && objectStateContainer[tabAttributeId].idTab === modelObject.idTab) {
+                                objectStateContainer[tabAttributeId].visible = false
+                                objectStateContainer[tabAttributeId] = modelObject
+                                modelObject.visible = true
+                            }
+                            else {
+                                objectStateContainer[tabAttributeId] = modelObject
+                                modelObject.visible = true
+                            }
+                            downloadedModel[model.id] = modelObject;
+                            this.scene.add(modelObject)
+                        }
+                    }, this)
+                }
+            }
+        }, this)
+    }
     handleWindowResize = () => {
         const width = this.mount.clientWidth;
         const height = this.mount.clientHeight;
-        this.renderer.setSize( width, height );
+        this.renderer.setSize(width, height);
         this.camera.aspect = width / height;
         this.camera.updateProjectionMatrix();
-    }; 
+    };
     render() {
-        console.log(this.props.modelOptions);
-        if(this.props.modelOptions && this.props.modelOptions.length > 0){
+        if (this.props.modelOptions && this.props.modelOptions.length > 0) {
             this.initThreeCanvas();
         }
-        const style = {width:'580px',height:'453px',marginTop:'70px'};
+        const style = { width: '580px', height: '453px', marginTop: '70px' };
         return (
-        <div className="left-section"> 
-            <div style={style} ref={ref => (this.mount = ref)} />
-        </div>
+            <div className="left-section">
+                <div style={style} ref={ref => (this.mount = ref)} />
+            </div>
         );
     }
 }

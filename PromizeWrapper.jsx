@@ -99,7 +99,6 @@ class PromizeWrapper extends React.Component {
    }
    handleStateFromChild(defaultOptions, selectedOptions){
       const modelOptions = [];
-      console.log(defaultOptions,selectedOptions);
       defaultOptions && defaultOptions.map((data)=>{
          var obj = {[data.promize_tab_attribute_id]:data.link_model_attributes};
          modelOptions.push(obj);
