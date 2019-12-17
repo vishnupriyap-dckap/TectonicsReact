@@ -1,5 +1,6 @@
 let downloadedModel = {};
 let modelRendred = false;
+let hdriDownloaded = false;
 class PromizeImageSection extends React.Component {
 
     constructor(props) {
@@ -11,55 +12,61 @@ class PromizeImageSection extends React.Component {
     componentDidMount() {
         // window.addEventListener('resize', this.handleWindowResize);
     }
-    sceneSetup = () => {
+
+    /* initialize scene */
+    async sceneSetup () {
         const width = this.mount.clientWidth;
         const height = this.mount.clientHeight;
 
+        /* create scene */
         this.scene = new THREE.Scene();
-        this.camera = new THREE.PerspectiveCamera(
-            75,
-            width / height,
-            0.1,
-            1000
-        );
+
+        /* create camera object */
+        this.camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
         this.camera.position.z = 9;
-        const objectStateContainer = new THREE.Group()
-        objectStateContainer.name = 'objectStateContainer'
-        this.scene.add(objectStateContainer)
+
+        /* add light to the scene */
+        const light = new THREE.AmbientLight(0xcfcfcf);
+        this.scene.add(light);  
+
+        /* maintains the currently loaded object in the scene */
+        const currentlyLoadedObject = new THREE.Group()
+        currentlyLoadedObject.name = 'currentlyLoadedObject'
+        this.scene.add(currentlyLoadedObject)
+
+        /* create orbit controls */
         this.controls = new THREE.OrbitControls(this.camera, this.mount);
+
+        /* create webgl renderer */
         this.renderer = new THREE.WebGLRenderer();
         this.renderer.setSize(width, height);
         this.mount.appendChild(this.renderer.domElement);
-    };
-    async addCustomSceneObjects(baseURL) {
-        // const geometry = new THREE.BoxGeometry(2, 2, 2);
-        // const material = new THREE.MeshPhongMaterial( {
-        //     color: 0x156289,
-        //     emissive: 0x072534,
-        //     side: THREE.DoubleSide,
-        //     flatShading: true
-        // } );
-        // this.cube = new THREE.Mesh( geometry, material );
-        // this.scene.add( this.cube );
+    }
 
-        const light = new THREE.AmbientLight(0xcfcfcf);
-        this.scene.add(light);
+    /* start rendering */
+    startAnimationLoop = () => {
+        this.renderer.render(this.scene, this.camera);
+        this.requestID = window.requestAnimationFrame(this.startAnimationLoop);
+    }
 
-        let hdri = await this.InitHdri('https://devcloud.productimize.com/cms/wp-content/themes/salient-child/View360/three_js_multi_fabric_multi_object_2/projects/_global_assets_/assets_3d/high_quality/hdri_images/sphere_mapping/studio015small.jpg')
-
-        let model = await this.DownloadModelGltf(baseURL)
-
-        model.traverse(
-            (child) => {
-                if (child.isMesh) {
-                    /* values for changing the image encoding. Linear = 3000, sRGB = 3001, RGBE = 3002, LogLuv = 3003 */
-                    if (child.material.userData.envMapNeeded)
-                        child.material.envMap = hdri
+    /* download hdri */
+    InitHdri = (url) => {
+        return new Promise((resolve, reject) => {
+            let textureLoader = new THREE.TextureLoader()
+            textureLoader.load(url,
+                (loader) => {
+                    loader.mapping = THREE.SphericalReflectionMapping
+                    loader.encoding = THREE.sRGBEncoding
+                    resolve(loader)
+                },
+                undefined,
+                (error) => {
+                    reject(`Unable to load the hdri map ${error}`)
                 }
-            }
-        )
-        this.scene.add(model)
-    };
+            )
+        })
+    }
+
     /* download model */
     DownloadModelGltf = (modelUrl) => {
         return new Promise((resolve, reject) => {
@@ -79,69 +86,48 @@ class PromizeImageSection extends React.Component {
             )
         })
     }
-    /* load hdri texture for material reflections */
-    InitHdri = (url) => {
-        return new Promise((resolve, reject) => {
-            let textureLoader = new THREE.TextureLoader()
-            let hdri = textureLoader.load(url,
-                (loader) => {
-                    loader.mapping = THREE.SphericalReflectionMapping
-                    loader.encoding = THREE.sRGBEncoding
-                    resolve(loader)
-                },
-                undefined,
-                (error) => {
-                    reject(`Unable to load the hdri map ${error}`)
-                }
-            )
-        })
-    }
-    startAnimationLoop = () => {
-        this.renderer.render(this.scene, this.camera);
-        this.requestID = window.requestAnimationFrame(this.startAnimationLoop);
-    };
 
-    initThreeCanvas() {
-        if (!modelRendred) {
-            this.sceneSetup();
-            this.startAnimationLoop();
-            modelRendred = true;
-            const light = new THREE.AmbientLight(0xcfcfcf);
-            this.scene.add(light);
-            // this.setState({modelRendred:true})   
-        }
-        this.loadThreeCanvasModel();
-    }
-    loadThreeCanvasModel = () => {
-        let objectStateContainer = this.scene.getObjectByName('objectStateContainer')
+    /* load model into the scene */
+    loadModel = () => {
+        let currentlyLoadedObject = this.scene.getObjectByName('currentlyLoadedObject')
         this.props.modelOptions && this.props.modelOptions.map((defaultOption) => {
             for (let tabAttributeId in defaultOption) {
                 if (defaultOption.hasOwnProperty(tabAttributeId)) {
                     let modelsData = JSON.parse(defaultOption[tabAttributeId])
                     modelsData && modelsData.map(async function (model) {
                         if (downloadedModel[model.id]) {
-                            if (objectStateContainer[tabAttributeId] && objectStateContainer[tabAttributeId].idTab === downloadedModel[model.id].idTab) {
-                                objectStateContainer[tabAttributeId].visible = false
-                                objectStateContainer[tabAttributeId] = downloadedModel[model.id]
+                            if (currentlyLoadedObject[tabAttributeId] && currentlyLoadedObject[tabAttributeId].idTab === downloadedModel[model.id].idTab) {
+                                currentlyLoadedObject[tabAttributeId].visible = false
+                                currentlyLoadedObject[tabAttributeId] = downloadedModel[model.id]
                                 downloadedModel[model.id].visible = true
                             }
                         } else {
-                            let modelObject = await this.DownloadModelGltf(this.props.modelUrl[model.id]);
-                            modelObject.idTab = tabAttributeId
-                            if (tabAttributeId == 1461) {
-                                modelObject.position.set(2, 0, 0)
-                            }
-                            else {
-                                modelObject.position.set(-2, 0, 0)
-                            }
+                            /* download hdri */
+                            if(!hdriDownloaded) 
+                                this.hdri = await this.InitHdri('https://devcloud.productimize.com/cms/wp-content/themes/salient-child/View360/three_js_multi_fabric_multi_object_2/projects/_global_assets_/assets_3d/high_quality/hdri_images/sphere_mapping/studio015small.jpg')
 
-                            if (objectStateContainer[tabAttributeId] && objectStateContainer[tabAttributeId].idTab === modelObject.idTab) {
-                                objectStateContainer[tabAttributeId].visible = false
-                                objectStateContainer[tabAttributeId] = modelObject
+                            /* download model */
+                            let modelObject = await this.DownloadModelGltf(this.props.modelUrl[model.id]);
+
+                            /* loop through object */
+                            modelObject.traverse(
+                                (child) => {
+                                    if (child.isMesh) {
+                                        /* apply hdri map */
+                                        if (child.material.userData.envMapNeeded)
+                                            child.material.envMap = this.hdri
+                                    }
+                                }
+                            )
+                            modelObject.idTab = tabAttributeId
+
+                            if (currentlyLoadedObject[tabAttributeId] && currentlyLoadedObject[tabAttributeId].idTab === modelObject.idTab) {
+                                currentlyLoadedObject[tabAttributeId].visible = false
+                                currentlyLoadedObject[tabAttributeId] = modelObject
                                 modelObject.visible = true
                             }
                             else {
-                                objectStateContainer[tabAttributeId] = modelObject
+                                currentlyLoadedObject[tabAttributeId] = modelObject
                                 modelObject.visible = true
                             }
                             downloadedModel[model.id] = modelObject;
@@ -152,13 +138,26 @@ class PromizeImageSection extends React.Component {
             }
         }, this)
     }
+
+    /* init 360 view */
+    initThreeCanvas() {
+        if (!modelRendred) {
+            this.sceneSetup();
+            this.startAnimationLoop();
+            modelRendred = true;
+        }
+        this.loadModel();
+    }
+
+    /* on window resize event */
     handleWindowResize = () => {
         const width = this.mount.clientWidth;
         const height = this.mount.clientHeight;
         this.renderer.setSize(width, height);
         this.camera.aspect = width / height;
         this.camera.updateProjectionMatrix();
-    };
+    }
+
     render() {
         if (this.props.modelOptions && this.props.modelOptions.length > 0) {
             this.initThreeCanvas();
