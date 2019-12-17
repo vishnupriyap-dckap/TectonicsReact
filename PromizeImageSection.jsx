@@ -1,9 +1,7 @@
-
 let downloadedModel = {};
 let modelRendred = false;
 let hdriDownloaded = false;
 class PromizeImageSection extends React.Component {
-
     constructor(props) {
         super(props);
         this.state = {
@@ -14,34 +12,53 @@ class PromizeImageSection extends React.Component {
         // window.addEventListener('resize', this.handleWindowResize);
     }
 
+    /* download image from url */
+    downloadImage = (url) => {
+        return new Promise((resolve, reject) => {
+            let img = new Image()
+            img.addEventListener('load', e => resolve(img))
+            img.addEventListener('error', () => {
+                reject(new Error(`Failed to load image from URL: ${url}`))
+            })
+            img.src = url
+        })
+    }
+
     /* initialize scene */
-    async sceneSetup () {
-        const width = this.threeContainer.clientWidth;
-        const height = this.threeContainer.clientHeight;
+    sceneSetup () {
+        return new Promise(async function (resolve) {
+            const width = this.threeContainer.clientWidth;
+            const height = this.threeContainer.clientHeight;
+    
+            /* create scene */
+            this.scene = new THREE.Scene();
+    
+            /* create camera object */
+            this.camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
+            this.camera.position.z = 9;
+    
+            /* add light to the scene */
+            const light = new THREE.AmbientLight(0xcfcfcf);
+            this.scene.add(light);  
+    
+            /* maintains the currently loaded object in the scene */
+            const currentlyLoadedObject = new THREE.Group()
+            currentlyLoadedObject.name = 'currentlyLoadedObject'
+            this.scene.add(currentlyLoadedObject)
+    
+            /* create orbit controls */
+            this.controls = new THREE.OrbitControls(this.camera, this.threeContainer);
+    
+            /* create webgl renderer */
+            this.renderer = new THREE.WebGLRenderer();
+            this.renderer.setSize(width, height);
+            this.threeContainer.appendChild(this.renderer.domElement);
+    
+            /* create dummey texture for fabric canvas */
+            this.whiteImage = await this.downloadImage('white.jpg')
+            resolve()
 
-        /* create scene */
-        this.scene = new THREE.Scene();
-
-        /* create camera object */
-        this.camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
-        this.camera.position.z = 9;
-
-        /* add light to the scene */
-        const light = new THREE.AmbientLight(0xcfcfcf);
-        this.scene.add(light);  
-
-        /* maintains the currently loaded object in the scene */
-        const currentlyLoadedObject = new THREE.Group()
-        currentlyLoadedObject.name = 'currentlyLoadedObject'
-        this.scene.add(currentlyLoadedObject)
-
-        /* create orbit controls */
-        this.controls = new THREE.OrbitControls(this.camera, this.threeContainer);
-
-        /* create webgl renderer */
-        this.renderer = new THREE.WebGLRenderer();
-        this.renderer.setSize(width, height);
-        this.threeContainer.appendChild(this.renderer.domElement);
+        }.bind(this))
     }
 
     /* start rendering */
@@ -51,7 +68,7 @@ class PromizeImageSection extends React.Component {
     }
 
     /* download hdri */
-    InitHdri = (url) => {
+    initHdri = (url) => {
         return new Promise((resolve, reject) => {
             let textureLoader = new THREE.TextureLoader()
             textureLoader.load(url,
@@ -69,7 +86,7 @@ class PromizeImageSection extends React.Component {
     }
 
     /* download model */
-    DownloadModelGltf = (modelUrl) => {
+    downloadModelGltf = (modelUrl) => {
         return new Promise((resolve, reject) => {
             /* init gltf loader */
             let loader = new THREE.GLTFLoader()
@@ -88,37 +105,45 @@ class PromizeImageSection extends React.Component {
         })
     }
 
+    /* apply color to fabric texture */
+    applyColorToFabric = (fabricCanvas, colorCode) => {
+        if (fabricCanvas.backgroundImage.filters.length === 0) {
+            fabricCanvas.backgroundImage.filters.push(new fabric.Image.filters.BlendColor({
+                color: colorCode,
+                mode: 'multiply'
+            }))
+        } else {
+            fabricCanvas.backgroundImage.filters[0].color = colorCode
+        }
+        fabricCanvas.backgroundImage.applyFilters()
+        fabricCanvas.renderAll()
+    }
+
     /* sets the background image of the fabric canvas */
-    ApplyTextureToCanvas = (texture, fabricCanvas) => {
-        let image = null
-        if(texture.type === 'rect') {
-            image = texture
-        }
-        else {
-            image = new fabric.Image(texture, {
-                left: fabricCanvas.width / 2,
-                top: fabricCanvas.height / 2,
-                angle: 0,
-                opacity: 1,
-                originX: "center",
-                originY: "center",
-                scaleX: fabricCanvas.width / fabricCanvas.width,
-                scaleY: fabricCanvas.width / fabricCanvas.width
-            })
-        }
+    applyTextureToCanvas = (texture, textureWidth, fabricCanvas) => {
+        let image = new fabric.Image(texture, {
+            left: fabricCanvas.width / 2,
+            top: fabricCanvas.height / 2,
+            angle: 0,
+            opacity: 1,
+            originX: "center",
+            originY: "center",
+            scaleX: fabricCanvas.width / textureWidth,
+            scaleY: fabricCanvas.width / textureWidth
+        })
 
         /* apply the settings for the background image */
-        fabricCanvas.setBackgroundImage(image, this.ApplyTextureSettings.bind(this, fabricCanvas))
+        fabricCanvas.setBackgroundImage(image, this.applyTextureSettings.bind(this, fabricCanvas))
     }
 
     /* custom functions to manipulate Fabric canvas background image */
-    ApplyTextureSettings = (fabricCanvas) => {
+    applyTextureSettings = (fabricCanvas) => {
         // fabricCanvas.backgroundImage.flipY = true
         fabricCanvas.renderAll()
     }
 
     /* init canvas texture and apply to the material */
-    CreateCanvasTexture = (/* assetData,  */material) => {
+    createCanvasTexture = (/* assetData,  */material) => {
         /* local variables */
         // let mask = null
         // let boundingBox = null
@@ -178,29 +203,13 @@ class PromizeImageSection extends React.Component {
 
         if (material.map) {
             /* apply texture (background image) to canvas */
-            this.ApplyTextureToCanvas(material.map.image, fabricCanvas)
+            this.applyTextureToCanvas(material.map.image, material.map.width, fabricCanvas)
         }
         else {
             /* create a rectangle with a white fill */
-            let backgroundImage = new fabric.Rect({
-                stroke: 'transparent',
-                strokeWidth:0,
-                fill: 'rgba(255,255,255,1)',
-                left: fabricCanvas.width / 2,
-                top: fabricCanvas.height / 2,
-                width: fabricCanvas.width,
-                height: fabricCanvas.height,
-                selectable:false,
-                editable: false,
-                evented: false,
-                hasControls: false,
-                hasBorders: false,
-                originX: "center",
-                originY: "center",
-            })
 
             /* apply texture (background image) to canvas */
-            this.ApplyTextureToCanvas(backgroundImage, fabricCanvas)
+            this.applyTextureToCanvas(this.whiteImage, this.whiteImage.width, fabricCanvas)
         }
 
         // /* create mask object */
@@ -264,8 +273,8 @@ class PromizeImageSection extends React.Component {
         // /* fabricCanvas.userData.uiData = typeUiReference */
         // fabricCanvas.userData.canvasData = canvasData
 
-        // /* add fabric canvas texture reference to the material */
-        // material.userData.fabricCanvas = fabricCanvas
+        /* add fabric canvas texture reference to the material */
+        material.userData.fabricCanvas = fabricCanvas
 
         // /* on reset functionality */
         // uiReference.parentNodes.resetButton.addEventListener('reset', () => {
@@ -298,10 +307,10 @@ class PromizeImageSection extends React.Component {
                         } else {
                             /* download hdri */
                             if(!hdriDownloaded) 
-                                this.hdri = await this.InitHdri('https://devcloud.productimize.com/cms/wp-content/themes/salient-child/View360/three_js_multi_fabric_multi_object_2/projects/_global_assets_/assets_3d/high_quality/hdri_images/sphere_mapping/studio015small.jpg')
+                                this.hdri = await this.initHdri('https://devcloud.productimize.com/cms/wp-content/themes/salient-child/View360/three_js_multi_fabric_multi_object_2/projects/_global_assets_/assets_3d/high_quality/hdri_images/sphere_mapping/studio015small.jpg')
 
                             /* download model */
-                            let modelObject = await this.DownloadModelGltf(this.props.modelUrl[model.id]);
+                            let modelObject = await this.downloadModelGltf(this.props.modelUrl[model.id]);
 
                             /* loop through object */
                             modelObject.traverse(
@@ -314,7 +323,7 @@ class PromizeImageSection extends React.Component {
                                         /* apply canvas texture */
                                         if (child.material.userData.canvasTexture) {
                                             /* create canvas texture */
-                                            let canvasTexture = this.CreateCanvasTexture(child.material)
+                                            let canvasTexture = this.createCanvasTexture(child.material)
                                     
                                             /* apply canvas texture */
                                             child.material.map = new THREE.CanvasTexture(canvasTexture)
@@ -323,6 +332,9 @@ class PromizeImageSection extends React.Component {
                                             child.material.map.encoding = THREE.sRGBEncoding
                                             child.material.map.anisotropy = 16
                                             child.material.map.flipY = false
+
+                                            /* apply color to canvas */
+                                            this.applyColorToFabric(child.material.userData.fabricCanvas, '#fc0303')
                                         }
                                     }
                                 }
@@ -347,9 +359,9 @@ class PromizeImageSection extends React.Component {
     }
 
     /* init 360 view */
-    initThreeCanvas() {
+    async initThreeCanvas() {
         if (!modelRendred) {
-            this.sceneSetup();
+            await this.sceneSetup();
             this.startAnimationLoop();
             modelRendred = true;
         }
