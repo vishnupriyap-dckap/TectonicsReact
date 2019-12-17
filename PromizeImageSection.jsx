@@ -1,3 +1,4 @@
+
 let downloadedModel = {};
 let modelRendred = false;
 let hdriDownloaded = false;
@@ -15,8 +16,8 @@ class PromizeImageSection extends React.Component {
 
     /* initialize scene */
     async sceneSetup () {
-        const width = this.mount.clientWidth;
-        const height = this.mount.clientHeight;
+        const width = this.threeContainer.clientWidth;
+        const height = this.threeContainer.clientHeight;
 
         /* create scene */
         this.scene = new THREE.Scene();
@@ -35,12 +36,12 @@ class PromizeImageSection extends React.Component {
         this.scene.add(currentlyLoadedObject)
 
         /* create orbit controls */
-        this.controls = new THREE.OrbitControls(this.camera, this.mount);
+        this.controls = new THREE.OrbitControls(this.camera, this.threeContainer);
 
         /* create webgl renderer */
         this.renderer = new THREE.WebGLRenderer();
         this.renderer.setSize(width, height);
-        this.mount.appendChild(this.renderer.domElement);
+        this.threeContainer.appendChild(this.renderer.domElement);
     }
 
     /* start rendering */
@@ -87,6 +88,199 @@ class PromizeImageSection extends React.Component {
         })
     }
 
+    /* sets the background image of the fabric canvas */
+    ApplyTextureToCanvas = (texture, fabricCanvas) => {
+        let image = null
+        if(texture.type === 'rect') {
+            image = texture
+        }
+        else {
+            image = new fabric.Image(texture, {
+                left: fabricCanvas.width / 2,
+                top: fabricCanvas.height / 2,
+                angle: 0,
+                opacity: 1,
+                originX: "center",
+                originY: "center",
+                scaleX: fabricCanvas.width / fabricCanvas.width,
+                scaleY: fabricCanvas.width / fabricCanvas.width
+            })
+        }
+
+        /* apply the settings for the background image */
+        fabricCanvas.setBackgroundImage(image, this.ApplyTextureSettings.bind(this, fabricCanvas))
+    }
+
+    /* custom functions to manipulate Fabric canvas background image */
+    ApplyTextureSettings = (fabricCanvas) => {
+        // fabricCanvas.backgroundImage.flipY = true
+        fabricCanvas.renderAll()
+    }
+
+    /* init canvas texture and apply to the material */
+    CreateCanvasTexture = (/* assetData,  */material) => {
+        /* local variables */
+        // let mask = null
+        // let boundingBox = null
+        // let canvasData = null
+        // let canvasReference = {}
+
+        // /* get target information globally for calculations */
+        // let targetTransformationCache = {
+        //     targetLastAngleValue: 0,
+        //     targetLastPositionX: 0,
+        //     targetLastPositionY: 0,
+        //     targetLastScalingValue: 0
+        // }
+        // canvasReference.targetTransformationCache = targetTransformationCache
+
+        // /* get canvas data from asset data */
+        // Object.keys(assetData.twoData.canvasList).forEach((key) => {
+        //     if (key === material.name) {
+        //         canvasData = assetData.twoData.canvasList[key]
+        //     }
+        // })
+
+        /* Init canvas ui and fabric canvas */
+        /* get fabric container html element */
+        // let fabricContainer = document.getElementById("fabric-container")
+
+        /* create canvas element and init default value */
+        let canvasElement = document.createElement("canvas")
+        this.fabricContainer.appendChild(canvasElement)
+        // if (canvasData.width && canvasData.height) {
+        //     canvasElement.setAttribute("width", canvasData.width + 'px')
+        //     canvasElement.setAttribute("height", canvasData.height + 'px')
+        // } else {
+        //     console.error('canvas texture dimensions undefined', canvasData)
+        // }
+        // fabricContainer.appendChild(canvasElement)
+
+        /* init fabric canvas */
+        /* disable retina scaling which causes issue in the mobile devices and preserveObjectStacking for keeping the layer order
+        disable group selection in the fabric canvas */
+        let fabricCanvas = new fabric.Canvas(canvasElement, { enableRetinaScaling: false, preserveObjectStacking: true, selection: false })
+        fabricCanvas.setHeight(2048);
+        fabricCanvas.setWidth(2048);
+        let canvasContainer = canvasElement.parentElement
+        // canvasContainer.setAttribute("id", material.name)
+        // for (let i = 0; i < canvasContainer.childNodes.length; i++) {
+        //     if (canvasContainer.childNodes[i].className == 'lower-canvas') {
+        //         canvasContainer.childNodes[i].id = material.name
+        //         break
+        //     }
+        // }
+        /* hide the fabric canvas once initiated */
+        canvasContainer.style.position = 'absolute'
+        canvasContainer.style.visibility = 'hidden'
+        canvasContainer.style.position = 'absolute'
+        // canvasReference.fabricCanvas = fabricCanvas
+
+        if (material.map) {
+            /* apply texture (background image) to canvas */
+            this.ApplyTextureToCanvas(material.map.image, fabricCanvas)
+        }
+        else {
+            /* create a rectangle with a white fill */
+            let backgroundImage = new fabric.Rect({
+                stroke: 'transparent',
+                strokeWidth:0,
+                fill: 'rgba(255,255,255,1)',
+                left: fabricCanvas.width / 2,
+                top: fabricCanvas.height / 2,
+                width: fabricCanvas.width,
+                height: fabricCanvas.height,
+                selectable:false,
+                editable: false,
+                evented: false,
+                hasControls: false,
+                hasBorders: false,
+                originX: "center",
+                originY: "center",
+            })
+
+            /* apply texture (background image) to canvas */
+            this.ApplyTextureToCanvas(backgroundImage, fabricCanvas)
+        }
+
+        // /* create mask object */
+        // if (canvasData.containsMask) {
+        //     mask = CreateMaskObject(canvasData, fabricCanvas)
+        //     canvasReference.mask = mask
+        // }
+
+        // /* init bounding box */
+        // if (canvasData.containsBoundingBox) {
+        //     boundingBox = new fabric.Rect(canvasData.boundingBox)
+        //     fabricCanvas.add(boundingBox)
+        //     canvasReference.boundingBox = boundingBox
+        // }
+
+        // /* create initial objects on fabric canvas */
+        // CreateInitialObjects(canvasData, canvasReference, assetData.twoData.fontsList)
+
+        // /* init events logic */
+        // /* init logic on fabric onTextChanged event */
+        // OnFabricTextChanged(canvasData, canvasReference)
+
+        // /* init logic on fabric onObjectMoving event */
+        // OnFabricObjectMoving(canvasData, canvasReference)
+
+        // /* init logic on fabric onObjectMoved event */
+        // OnFabricObjectMoved(canvasReference)
+
+        // /* init logic on fabric onObjectRotating event */
+        // OnFabricObjectRotating(canvasData, canvasReference)
+
+        // /* init logic on fabric onObjectRotated event */
+        // OnFabricObjectRotated(canvasReference)
+
+        // /* init logic on fabric onObjectScaling event */
+        // OnFabricObjectScaling(canvasData, canvasReference)
+
+        // /* init logic on fabric onObjectScaled event */
+        // OnFabricObjectScaled(canvasReference)
+
+        // /* init logic onFabricSelectionCreated event */
+        // OnFabricSelectionCreated(canvasData, canvasReference, /* typeUiReference */)
+
+        // /* init logic onFabricSelectionCleared event */
+        // OnFabricSelectionCleared(canvasData, canvasReference, /* typeUiReference */)
+
+        // /* init logic on onMouseDown event */
+        // OnFabricMouseDown(canvasReference)
+
+        // /* init logic on onMouseUp event */
+        // OnfabricMouseUp(canvasReference)
+
+        // /* init logic on afterFabricCanvasRender event */
+        // OnFabricAfterRender(canvasReference, material)
+
+        // /* add mouse or touch events to fabric canvas */
+        // AddMouseOrTouchListnerToFabric(canvasReference)
+
+        // /* add uiDataReference to the fabric object */
+        // fabricCanvas.userData = {}
+        // /* fabricCanvas.userData.uiData = typeUiReference */
+        // fabricCanvas.userData.canvasData = canvasData
+
+        // /* add fabric canvas texture reference to the material */
+        // material.userData.fabricCanvas = fabricCanvas
+
+        // /* on reset functionality */
+        // uiReference.parentNodes.resetButton.addEventListener('reset', () => {
+        //     /* remove all the objects from canvas */
+        //     fabricCanvas.remove.apply(fabricCanvas, fabricCanvas.getObjects())
+
+        //     /* create initial objects on fabric canvas */
+        //     CreateInitialObjects(canvasData, canvasReference, assetData.twoData.fontsList)
+        //     fabricCanvas.renderAll()
+        // })
+
+        /* return canvas */
+        return fabricCanvas.lowerCanvasEl
+    }
+
     /* load model into the scene */
     loadModel = () => {
         let currentlyLoadedObject = this.scene.getObjectByName('currentlyLoadedObject')
@@ -116,11 +310,24 @@ class PromizeImageSection extends React.Component {
                                         /* apply hdri map */
                                         if (child.material.userData.envMapNeeded)
                                             child.material.envMap = this.hdri
+
+                                        /* apply canvas texture */
+                                        if (child.material.userData.canvasTexture) {
+                                            /* create canvas texture */
+                                            let canvasTexture = this.CreateCanvasTexture(child.material)
+                                    
+                                            /* apply canvas texture */
+                                            child.material.map = new THREE.CanvasTexture(canvasTexture)
+
+                                            /* texture settings */
+                                            child.material.map.encoding = THREE.sRGBEncoding
+                                            child.material.map.anisotropy = 16
+                                            child.material.map.flipY = false
+                                        }
                                     }
                                 }
                             )
                             modelObject.idTab = tabAttributeId
-
                             if (currentlyLoadedObject[tabAttributeId] && currentlyLoadedObject[tabAttributeId].idTab === modelObject.idTab) {
                                 currentlyLoadedObject[tabAttributeId].visible = false
                                 currentlyLoadedObject[tabAttributeId] = modelObject
@@ -151,8 +358,8 @@ class PromizeImageSection extends React.Component {
 
     /* on window resize event */
     handleWindowResize = () => {
-        const width = this.mount.clientWidth;
-        const height = this.mount.clientHeight;
+        const width = this.threeContainer.clientWidth;
+        const height = this.threeContainer.clientHeight;
         this.renderer.setSize(width, height);
         this.camera.aspect = width / height;
         this.camera.updateProjectionMatrix();
@@ -162,10 +369,11 @@ class PromizeImageSection extends React.Component {
         if (this.props.modelOptions && this.props.modelOptions.length > 0) {
             this.initThreeCanvas();
         }
-        const style = { width: '580px', height: '453px', marginTop: '70px' };
+        const threeStyle = { width: '580px', height: '453px', marginTop: '70px' };
         return (
             <div className="left-section">
-                <div style={style} ref={ref => (this.mount = ref)} />
+                <div id="three-container" style={threeStyle} ref={ref => (this.threeContainer = ref)} />
+                <div id="fabric-container" ref={ref => (this.fabricContainer = ref)} />
             </div>
         );
     }
