@@ -12,18 +12,6 @@ class PromizeImageSection extends React.Component {
         // window.addEventListener('resize', this.handleWindowResize);
     }
 
-    /* download image from url */
-    downloadImage = (url) => {
-        return new Promise((resolve, reject) => {
-            let img = new Image()
-            img.addEventListener('load', e => resolve(img))
-            img.addEventListener('error', () => {
-                reject(new Error(`Failed to load image from URL: ${url}`))
-            })
-            img.src = url
-        })
-    }
-
     /* initialize scene */
     sceneSetup () {
         return new Promise(async function (resolve) {
@@ -67,8 +55,20 @@ class PromizeImageSection extends React.Component {
         this.requestID = window.requestAnimationFrame(this.startAnimationLoop);
     }
 
+    /* download image from url */
+    downloadImage = (url) => {
+        return new Promise((resolve, reject) => {
+            let img = new Image()
+            img.addEventListener('load', e => resolve(img))
+            img.addEventListener('error', () => {
+                reject(new Error(`Failed to load image from URL: ${url}`))
+            })
+            img.src = url
+        })
+    }
+
     /* download hdri */
-    initHdri = (url) => {
+    downloadHdri = (url) => {
         return new Promise((resolve, reject) => {
             let textureLoader = new THREE.TextureLoader()
             textureLoader.load(url,
@@ -198,7 +198,6 @@ class PromizeImageSection extends React.Component {
         /* hide the fabric canvas once initiated */
         canvasContainer.style.position = 'absolute'
         canvasContainer.style.visibility = 'hidden'
-        canvasContainer.style.position = 'absolute'
         // canvasReference.fabricCanvas = fabricCanvas
 
         if (material.map) {
@@ -293,8 +292,10 @@ class PromizeImageSection extends React.Component {
     /* load model into the scene */
     loadModel = () => {
         let currentlyLoadedObject = this.scene.getObjectByName('currentlyLoadedObject')
+        console.log(this.props,"Image component");
         this.props.modelOptions && this.props.modelOptions.map((defaultOption) => {
             for (let tabAttributeId in defaultOption) {
+                console.log(defaultOption);
                 if (defaultOption.hasOwnProperty(tabAttributeId)) {
                     let modelsData = JSON.parse(defaultOption[tabAttributeId])
                     modelsData && modelsData.map(async function (model) {
@@ -307,7 +308,7 @@ class PromizeImageSection extends React.Component {
                         } else {
                             /* download hdri */
                             if(!hdriDownloaded) 
-                                this.hdri = await this.initHdri('https://devcloud.productimize.com/cms/wp-content/themes/salient-child/View360/three_js_multi_fabric_multi_object_2/projects/_global_assets_/assets_3d/high_quality/hdri_images/sphere_mapping/studio015small.jpg')
+                                this.hdri = await this.downloadHdri('https://devcloud.productimize.com/cms/wp-content/themes/salient-child/View360/three_js_multi_fabric_multi_object_2/projects/_global_assets_/assets_3d/high_quality/hdri_images/sphere_mapping/studio015small.jpg')
 
                             /* download model */
                             let modelObject = await this.downloadModelGltf(this.props.modelUrl[model.id]);
